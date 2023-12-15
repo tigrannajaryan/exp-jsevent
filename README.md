@@ -1,16 +1,14 @@
 Execution output:
 
 ```
-example.js:38 Generating flattened events
-example.js:70 Exporting 121 events...
-example.js:93 Original JSON len: 85896 bytes, Encoded JSON len: 23389 bytes
-example.js:98 Encoding time: 1.6999998092651367 ms
-example.js:33 Generating nested events
-example.js:70 Exporting 121 events...
-example.js:93 Original JSON len: 32550 bytes, Encoded JSON len: 21426 bytes
-example.js:98 Encoding time: 1 ms
+example.ts:46 Generating flattened events
+example.ts:63 Exporting 121 events...
+example.ts:70 Original JSON len: 87711 bytes, JSON.stringify 0.500ms
+example.ts:76 Encoded with KeyDictionary, JSON len: 24115 bytes, Encoding and JSON.stringify time: 1.600 ms
+example.ts:76 Encoded with OTLP, JSON len: 158747 bytes, Encoding and JSON.stringify time: 3.100 ms
+example.ts:41 Generating nested events
+example.ts:63 Exporting 121 events...
+example.ts:70 Original JSON len: 33276 bytes, JSON.stringify 0.200ms
+example.ts:76 Encoded with KeyDictionary, JSON len: 21908 bytes, Encoding and JSON.stringify time: 1.300 ms
+example.ts:76 Encoded with OTLP, JSON len: 104312 bytes, Encoding and JSON.stringify time: 2.600 ms
 ```
-
-In original, non-encoded form the flattened events are 85896-32550 = 53346 bytes larger (85896/32550=2.64 times larger) than in nested form (both JSON encoded).
-
-In dictionary-encoded form the flattened events are 23389-21426 = 1963 bytes larger (23389/21426=1.09 times larger) than in nested form (both JSON encoded).
