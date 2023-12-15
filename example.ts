@@ -1,4 +1,4 @@
-import { dictExport, ExporterFunc } from "./exporter.js";
+import { DictExporter, ExporterDef } from "./exporter.js";
 import {  LogRecord, AttributesMap } from "./logrecord.js"
 
 function createFlatEvent(name: string, fieldCount: number): LogRecord {
@@ -51,7 +51,7 @@ function onLoad() {
 }
 
 var batch: LogRecord[] = [];
-var exporter: ExporterFunc = dictExport;
+var exporters: ExporterDef[] = [DictExporter];
 
 function recordEvent(e: LogRecord) {
     batch.push(e);
@@ -65,24 +65,21 @@ function exportBatch() {
     var end = performance.now();
     const origStringifyMS = end-start;
 
-    const jsEncoded = exporter(batch);
+    console.log(`Original JSON len: ${jsOrig.length}bytes, JSON.stringify ${origStringifyMS.toFixed(3)}ms`);
+
+    for (const exporterDef of exporters) {
+        start = performance.now();
+        const jsEncoded = exporterDef.exportFunc(batch);
+        const exportMS = performance.now()-end;
+        console.log(`Encoded with ${exporterDef.name}, JSON len: ${jsEncoded.length}bytes, Encoding and JSON.stringify time: ${exportMS.toFixed(3)} ms`);
+    }
 
     batch = [];
-
-    const exportMS = performance.now()-end;
-
-    console.log(
-        "Original JSON len:",jsOrig.length,"bytes,",
-        "Encoded JSON len:",jsEncoded.length,"bytes"
-    );
 
     // console.log(
     //     "Original JSON:",jsOrig,
     //     "Encoded JSON:",jsEncoded
     // );
-
-    console.log(`Original JSON.stringify ${origStringifyMS.toFixed(3)}ms`,
-    ` Encoding and JSON.stringify time: ${exportMS.toFixed(3)} ms`);
 }
 
 onLoad()

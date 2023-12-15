@@ -1,6 +1,9 @@
 import { LogRecord, AttributesMap } from "./logrecord.js"
 
-export type ExporterFunc = (records:LogRecord[])=>string;
+export type ExporterDef = {
+    name: string,
+    exportFunc: (records:LogRecord[])=>string
+}
 
 function otlpExport(records:LogRecord[]):string {
     return ""
@@ -8,7 +11,7 @@ function otlpExport(records:LogRecord[]):string {
 
 type DictType = { strings: {[key:string]:any}, len: number }
 
-export function dictExport(records:LogRecord[]):string {
+function dictExport(records:LogRecord[]):string {
     var dict:DictType = {strings:{}, len:0}    ;
     var encodedBatch = [];
     for (const record of records) {
@@ -61,3 +64,7 @@ function encodeDict(dict:DictType):string[] {
     return d;
 }
 
+export const DictExporter: ExporterDef ={
+    name: "Dict",
+    exportFunc: dictExport,
+};
