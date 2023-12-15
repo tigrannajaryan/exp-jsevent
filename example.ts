@@ -1,22 +1,23 @@
-function createFlatEvent(name: string, fieldCount: number): any {
-    var e:any = {"event.name": name};
+function createFlatEvent(name: string, fieldCount: number): LogRecord {
+    const attrs:AttributesMap = {"event.name": name}
     for (var i=0; i<fieldCount; i++) {
-        e[name+".attr"+i] = i;
+        attrs[name+".attr"+i] = i;
     }
+    var e: LogRecord = {Attributes:attrs};
     return e;
 }
 
-function createNestedEvent(name: string, fieldCount: number): any {
-    var e:any = {"event.name": name};
+function createNestedEvent(name: string, fieldCount: number): LogRecord {
     var payload:any = {};
+    const attrs:AttributesMap = {"event.name": name};
     for (var i=0; i<fieldCount; i++) {
         payload["attr"+i] = i;
     }
-    e["event.payload"] = payload;
+    var e: LogRecord = {Attributes:attrs, Body: payload};
     return e;
 }
 
-type generatorFunc = (name: string, fieldCount: number)=>any;
+type generatorFunc = (name: string, fieldCount: number)=>LogRecord;
 
 function generateEvents(generator: generatorFunc): void {
     recordEvent(generator("browser.page_view",4));
@@ -46,9 +47,9 @@ function onLoad() {
     testNestedEvents();
 }
 
-var batch: any[] = []
+var batch: LogRecord[] = []
 
-function recordEvent(e: any) {
+function recordEvent(e: LogRecord) {
     batch.push(e);
 }
 
