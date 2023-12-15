@@ -1,6 +1,6 @@
-type AttributesMap = {[key:string]:any}
+export type AttributesMap = {[key:string]:any}
 
-type LogRecord = {
+export type LogRecord = {
     Timestamp?: number;
     Body?: any;
     Attributes?: AttributesMap

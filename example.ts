@@ -1,3 +1,6 @@
+import { dictExport, ExporterFunc } from "./exporter.js";
+import {  LogRecord, AttributesMap } from "./logrecord.js"
+
 function createFlatEvent(name: string, fieldCount: number): LogRecord {
     const attrs:AttributesMap = {"event.name": name}
     for (var i=0; i<fieldCount; i++) {
@@ -47,82 +50,39 @@ function onLoad() {
     testNestedEvents();
 }
 
-var batch: LogRecord[] = []
+var batch: LogRecord[] = [];
+var exporter: ExporterFunc = dictExport;
 
 function recordEvent(e: LogRecord) {
     batch.push(e);
 }
 
-type DictType = { strings: {[key:string]:any}, len: number }
-
 function exportBatch() {
     console.log("Exporting",batch.length,"events...");
 
-    const start = performance.now();
+    var start = performance.now();
+    const jsOrig = JSON.stringify(batch)
+    var end = performance.now();
+    const origStringifyMS = end-start;
 
-    var dict:DictType = {strings:{}, len:0}    ;
-    var encodedBatch = [];
-    var origBatch = [];
-    for (const record of batch) {
-        var encodedRecord = encodeObject(record, dict);
-        encodedBatch.push(encodedRecord);
-        origBatch.push(record);
-    }
-    const exportData = {r: encodedBatch, d: encodeDict(dict)};
-    
-    //console.log("Unencoded export data", batch)
-    //console.log("Encoded export data", exportData)
-
-    const jsOrig = JSON.stringify(origBatch)
-    const jsEncoded = JSON.stringify(exportData)
+    const jsEncoded = exporter(batch);
 
     batch = [];
 
-    const end = performance.now();
+    const exportMS = performance.now()-end;
 
     console.log(
         "Original JSON len:",jsOrig.length,"bytes,",
         "Encoded JSON len:",jsEncoded.length,"bytes"
     );
 
-    console.log(`Encoding time: ${end - start} ms`);
-}
+    // console.log(
+    //     "Original JSON:",jsOrig,
+    //     "Encoded JSON:",jsEncoded
+    // );
 
-function encodeObject(obj:any, dict:DictType) {
-    var encoded:any = {};
-    for (const key in obj) {
-        const keyRef = encodeVal(key,dict);
-
-        var val = obj[key]
-
-        if (typeof val == "object") {
-            val = encodeObject(val, dict);
-        }
-
-        encoded[keyRef] = val;
-    }
-    return encoded;
-}
-
-function encodeVal(val:any, dict:DictType):any {
-    var ref: number;
-    if (val in dict.strings) {
-        ref = dict.strings[val];
-    } else {
-        dict.len++;
-        ref = dict.len;
-        dict.strings[val] = ref;
-    }
-    return ref;
-}
-
-function encodeDict(dict:DictType):string[] {
-    var d:string[] = [];
-    for (const key in dict.strings) {
-        const ref = dict.strings[key];
-        d[ref] = key;
-    }
-    return d;
+    console.log(`Original JSON.stringify ${origStringifyMS.toFixed(3)}ms`,
+    ` Encoding and JSON.stringify time: ${exportMS.toFixed(3)} ms`);
 }
 
 onLoad()

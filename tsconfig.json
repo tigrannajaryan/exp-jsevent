@@ -1,10 +1,12 @@
 {
     "compilerOptions": {
-      "target": "ES5",
-      "module": "CommonJS",
+      "target": "es2015",
+      "module": "es2015",
+      "moduleResolution": "node",
       "sourceMap": true,
       "noImplicitAny": true,
       "strict": true,
-      "outDir": "dist"
+      "outDir": "dist",
+      //"allowImportingTsExtensions": true
     }
 }
