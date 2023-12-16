@@ -46,11 +46,11 @@ function generateEvents(generator: DataModel): void {
 }
 
 function testNestedEvents() {
-    generateEvents({name:"Nested in Body, no namespaces", generate:createNestedEvent});
+    generateEvents({name:"Nested, in Body, no namespaces", generate:createNestedEvent});
 }
 
 function testFlatEvents() {
-    generateEvents({name:"Flattened in Attributes, with namespaces", generate:createFlatEvent});
+    generateEvents({name:"Flattened, in Attributes, with namespaces", generate:createFlatEvent});
 }
 
 var batch: LogRecord[] = [];
@@ -69,13 +69,13 @@ function exportBatch() {
     var end = performance.now();
     const origStringifyMS = end-start;
 
-    addRow(["JSON.stringify as-is", jsOrig.length, origStringifyMS.toFixed(3)]);
+    addRow(["JSON.stringify as-is", jsOrig.length, origStringifyMS.toFixed(1)]);
 
     for (const exporterDef of exporters) {
         start = performance.now();
         const jsEncoded = exporterDef.exportFunc(batch);
         const exportMS = performance.now()-end;
-        addRow([exporterDef.name, jsEncoded.length, exportMS.toFixed(3)]);
+        addRow([exporterDef.name, jsEncoded.length, exportMS.toFixed(1)]);
     }
 
     batch = [];

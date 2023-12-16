@@ -69,6 +69,6 @@ function encodeDict(dict:DictType):string[] {
 }
 
 export const DictExporter: ExporterDef ={
-    name: "OTLP Web, with dictionary",
+    name: "OTLP with key dictionary",
     exportFunc: dictExport,
 };
