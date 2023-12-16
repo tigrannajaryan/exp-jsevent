@@ -12,6 +12,7 @@ function otlpExport(records:LogRecord[]):string {
 
 function otlEncodeRecord(record: LogRecord): any {
     return {
+        "timestamp": record.Timestamp,
         "body": encodeValue(record.Body),
         "attributes": encodeAttrs(record.Attributes)
     }
@@ -47,6 +48,6 @@ function encodeValue(val: any): any {
 }
 
 export const OtlpExporter: ExporterDef ={
-    name: "OTLP",
+    name: "OTLP JSON",
     exportFunc: otlpExport,
 };

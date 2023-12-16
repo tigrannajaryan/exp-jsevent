@@ -2,6 +2,7 @@ import { ExporterDef } from "./exporter.js";
 import { DictExporter } from "./exporters/dictExporter.js";
 import { OtlpExporter } from "./exporters/otlpExporter.js";
 import {  LogRecord, AttributesMap } from "./logrecord.js"
+import { addRow, beginTable, log } from "./report.js";
 
 function createFlatEvent(name: string, fieldCount: number): LogRecord {
     const attrs:AttributesMap = {"event.name": name}
@@ -22,58 +23,59 @@ function createNestedEvent(name: string, fieldCount: number): LogRecord {
     return e;
 }
 
-type generatorFunc = (name: string, fieldCount: number)=>LogRecord;
+type DataModel = {
+    name: string;
+    generate: (name: string, fieldCount: number)=>LogRecord;
+}
 
-function generateEvents(generator: generatorFunc): void {
-    recordEvent(generator("browser.page_view",4));
-    recordEvent(generator("browser.page_navigation_timing",21));
-    recordEvent(generator("browser.web_vitals",15));
+//type generatorFunc = (name: string, fieldCount: number)=>LogRecord;
+
+function generateEvents(generator: DataModel): void {
+    beginTable(generator.name, ["Encoding", "Wire size (bytes)", "Encoding duration (ms)"]);
+
+    recordEvent(generator.generate("browser.page_view",4));
+    recordEvent(generator.generate("browser.page_navigation_timing",21));
+    recordEvent(generator.generate("browser.web_vitals",15));
     for (var i=0; i<6; i++) {
-        recordEvent(generator("browser.http_request",6));
+        recordEvent(generator.generate("browser.http_request",6));
     }
     for (var i=0; i<112; i++) {
-        recordEvent(generator("browser.resource_timing",20));
+        recordEvent(generator.generate("browser.resource_timing",20));
     }
     exportBatch();
 }
 
 function testNestedEvents() {
-    console.log("Generating nested events");
-    generateEvents(createNestedEvent);
+    generateEvents({name:"Nested in Body, no namespaces", generate:createNestedEvent});
 }
 
 function testFlatEvents() {
-    console.log("Generating flattened events");
-    generateEvents(createFlatEvent);
-}
-
-function onLoad() {
-    testFlatEvents();
-    testNestedEvents();
+    generateEvents({name:"Flattened in Attributes, with namespaces", generate:createFlatEvent});
 }
 
 var batch: LogRecord[] = [];
-var exporters: ExporterDef[] = [DictExporter, OtlpExporter];
+var exporters: ExporterDef[] = [OtlpExporter, DictExporter];
 
 function recordEvent(e: LogRecord) {
+    e.Timestamp = 1702747793*1000000000;
     batch.push(e);
 }
 
 function exportBatch() {
-    console.log("Exporting",batch.length,"events...");
+    log("Exported",batch.length,"events.");
 
     var start = performance.now();
     const jsOrig = JSON.stringify(batch)
     var end = performance.now();
     const origStringifyMS = end-start;
 
-    console.log(`Original JSON len: ${jsOrig.length} bytes, JSON.stringify ${origStringifyMS.toFixed(3)}ms`);
+    addRow(["JSON.stringify as-is", jsOrig.length, origStringifyMS.toFixed(3)]);
 
     for (const exporterDef of exporters) {
         start = performance.now();
         const jsEncoded = exporterDef.exportFunc(batch);
         const exportMS = performance.now()-end;
-        console.log(`Encoded with ${exporterDef.name}, JSON len: ${jsEncoded.length} bytes, Encoding and JSON.stringify time: ${exportMS.toFixed(3)} ms`);
+        addRow([exporterDef.name, jsEncoded.length, exportMS.toFixed(3)]);
     }
 
     batch = [];
@@ -84,4 +86,11 @@ function exportBatch() {
     // );
 }
 
-onLoad()
+function onLoad() {
+    testFlatEvents();
+    testNestedEvents();
+}
+
+window.addEventListener("load", (event) => {
+    onLoad();
+});

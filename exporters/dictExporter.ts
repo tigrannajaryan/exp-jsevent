@@ -21,6 +21,7 @@ function dictExport(records:LogRecord[]):string {
 
 function encodeRecord(record: LogRecord, dict:DictType): any {
     return {
+        "t": record.Timestamp,
         "b": encodeObject(record.Body, dict),
         "a": encodeObject(record.Attributes, dict)
     }
@@ -41,7 +42,7 @@ function encodeObject(obj:any, dict:DictType) {
             val = encodeObject(val, dict);
         }
 
-        encoded[keyRef] = val;
+        encoded["@"+keyRef.toString(16)] = val;
     }
     return encoded;
 }
@@ -51,9 +52,9 @@ function encodeVal(val:any, dict:DictType):any {
     if (val in dict.strings) {
         ref = dict.strings[val];
     } else {
-        dict.len++;
         ref = dict.len;
         dict.strings[val] = ref;
+        dict.len++;
     }
     return ref;
 }
@@ -68,6 +69,6 @@ function encodeDict(dict:DictType):string[] {
 }
 
 export const DictExporter: ExporterDef ={
-    name: "KeyDictionary",
+    name: "OTLP Web, with dictionary",
     exportFunc: dictExport,
 };
