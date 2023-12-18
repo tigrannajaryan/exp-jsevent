@@ -1,6 +1,6 @@
 .PHONY: watch
 watch:
-	./node_modules/typescript/bin/tsc -w & node dist/server.js
+	./node_modules/typescript/bin/tsc -w & node server.js
 
 .PHONY: install
 install:
