@@ -28,8 +28,6 @@ type DataModel = {
     generate: (name: string, fieldCount: number)=>LogRecord;
 }
 
-//type generatorFunc = (name: string, fieldCount: number)=>LogRecord;
-
 function generateEvents(generator: DataModel): void {
     beginTable(generator.name, ["Encoding", "Wire size (bytes)", "Encoding duration (ms)"]);
 
@@ -61,29 +59,35 @@ function recordEvent(e: LogRecord) {
     batch.push(e);
 }
 
+type BenchmarkResult = {
+    retValues: any[];
+    durationMS: number;
+}
+
+function benchmark(func: Function): BenchmarkResult {
+    const ITERATIONS = 10;
+    const start = performance.now();
+    var retValues = [];
+    for (var i=0; i<ITERATIONS; i++) {
+        const val = func();
+        retValues.push(val);
+    }
+    const durationMS = performance.now()-start;
+    return { retValues: retValues, durationMS: durationMS/ITERATIONS };
+}
+
 function exportBatch() {
-    log("Exported",batch.length,"events.");
-
-    var start = performance.now();
-    const jsOrig = JSON.stringify(batch)
-    var end = performance.now();
-    const origStringifyMS = end-start;
-
-    addRow(["JSON.stringify as-is", jsOrig.length, origStringifyMS.toFixed(1)]);
+    const { retValues: jsOrig, durationMS } = benchmark(()=>JSON.stringify(batch));
+    addRow(["JSON.stringify as-is", jsOrig[0].length, durationMS.toFixed(1)]);
 
     for (const exporterDef of exporters) {
-        start = performance.now();
-        const jsEncoded = exporterDef.exportFunc(batch);
-        const exportMS = performance.now()-end;
-        addRow([exporterDef.name, jsEncoded.length, exportMS.toFixed(1)]);
+        const { retValues: jsEncoded, durationMS } = benchmark(()=>exporterDef.exportFunc(batch));
+        addRow([exporterDef.name, jsEncoded[0].length, durationMS.toFixed(1)]);
     }
 
-    batch = [];
+    log("Exported",batch.length,"events.");
 
-    // console.log(
-    //     "Original JSON:",jsOrig,
-    //     "Encoded JSON:",jsEncoded
-    // );
+    batch = [];
 }
 
 function onLoad() {
